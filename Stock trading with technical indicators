@@ -1,0 +1,471 @@
+# Applied methods will be bollinger bands + moving average, 
+
+# Bollinger bands + moving average
+#import the necessary models
+import re
+import numpy as np
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import preprocessing
+#Read the data
+data=pd.read_csv('/content/CAT.csv')
+# Defining stop gain and stop loss
+def stop_limits(held_share_values,current_held_shares,current_price):
+  stop_loss=held_share_values-(held_share_values*0.1)
+  stop_gain=held_share_values*1.15
+  if current_held_shares>0 and current_price*current_held_shares>=stop_gain or current_held_shares>0 and current_price*current_held_shares<=stop_loss:
+    return True
+  else:
+    return False
+ # Main function
+def main(data):
+  close=np.array(data[['Close']])
+  open=np.array(data[['Open']])
+  testc=close[-502:]
+  testo=open[-502:]
+  # The trading method
+  def trading():
+    current_held_shares=0
+    purchased_time=0
+    total_positive_trades=0
+    total_negative_trades=0
+    total_loss=0
+    total_win=0
+    holding_days=[]
+    profit=0
+    held_share_values=0
+    purchased_value=0
+    total_investment=0
+    average=0
+    
+     last_bol1=0
+    last_bol2=0
+    last_average=np.average(close[-563:-503])
+    last_close=close[-503]
+
+    for i in range(len(testc)-1):
+        start=-522+i
+        end=-502+i
+        start_a=-562+i
+        data=close[start:end]
+        sma=np.average(close[start_a:end])
+
+        average=np.average(data)
+        # Upper bollinger band
+        bol1=average+(st*2)
+        # Lower bollinger band
+        bol2=average-(st*2)
+
+          # Buying condition with bollinger bands
+        if current_held_shares<1000 and testc[i]<bol2 and last_bol2<last_close:
+  
+         purchased_value=testo[i+1]*500
+         held_share_values+=purchased_value
+         current_held_shares+=500
+         
+         total_investment+=purchased_value
+         if purchased_time==0:
+           purchased_time=i+1
+         # Selling condition with moving average
+        elif last_close<last_average and testc[i]>=sma and current_held_shares<1000:
+  
+         purchased_value=testo[i+1]*50
+         held_share_values+=purchased_value
+         current_held_shares+=50
+         
+         total_investment+=purchased_value
+         if purchased_time==0:
+           purchased_time=i+1
+        # Selling condition
+        elif i>0 and current_held_shares>0 and testc[i]>bol1 and last_close<last_bol1 or i>0 and last_close>last_average and sma>=testc[i] and current_held_shares>0 or stop_limits(held_share_values,current_held_shares,testc[i]) and current_held_shares>0:
+         sell=testo[i+1]*current_held_shares
+         profit+=sell-held_share_values
+         diff=sell-held_share_values
+    
+         holding_days.append((i+1)-purchased_time)
+   
+         if diff>0:
+          total_positive_trades+=1
+          total_win+=diff
+         elif diff<0:
+          total_negative_trades+=1
+          total_loss+=diff
+         diff=0
+         sell=0
+         purchased_value=0
+         purchased_time=0
+         held_share_values=0
+         current_held_shares=0
+    
+        last_average=sma
+        last_close=testc[i]
+        last_bol1=bol1
+        last_bol2=bol2
+        # Measure the performance of the method
+    def performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days):
+       
+        rtn=(profit/total_investment)*100
+        positive_trades_ratio=total_positive_trades/(total_positive_trades+total_negative_trades)
+        negative_trades_ratio=total_negative_trades/(total_positive_trades+total_negative_trades)
+        average_win=total_win/total_positive_trades
+        average_loss=total_loss/total_negative_trades
+        appt=(positive_trades_ratio*average_win)-(negative_trades_ratio*abs(average_loss))
+        average_holding_period=np.average(holding_days)
+
+        print(rtn)
+        print(total_positive_trades,total_negative_trades)
+        print(positive_trades_ratio)
+        print(negative_trades_ratio)
+        print(average_win)
+        print(average_loss)
+        print(appt)
+        print(np.average((holding_days)))
+
+    return performance_measurements(total_positive_trades,total_negative_trades,total_investment,profit,total_win,total_loss,holding_days)    
+  return trading()
+# Relative Strength Index + MACD  
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+data=pd.read_csv('/content/JPM.csv')
+
+close=np.array(data[['Close']])
+open=np.array(data[['Open']])
+open0=open[-526:-512]
+close0=close[-526:-512]
+testc=close[-502:]
+testo=open[-502:]
+last_average_gain=0
+last_average_loss=0
+average_gain=0
+average_loss=0
+indices=[]
+for j in range(13):
+
+    if close0[j+1]>close0[j]:
+      diff=close0[j+1]-close0[j]
+      last_average_gain+=diff
+    elif close0[j+1]<close0[j]:
+     diff=close0[j]-close0[j+1]
+     last_average_loss+=diff
+   # last_average_gain=last_average_gain/14
+    #last_average_loss=last_average_loss/14
+for i in range(len(testc)):
+  start=(-502+i)-14
+  end=-502+i
+  average_gain=0
+  average_loss=0
+  open0=open[start:end]
+  close0=close[start:end]
+  # Preparing the average gain and average loss to start with
+  for j in range(13):
+
+      if close0[j+1]>close0[j]:
+        diff=close0[j+1]-close0[j]
+        average_gain+=diff
+      elif close0[j+1]<close0[j]:
+        diff=close0[j]-close0[j+1]
+        average_loss+=diff
+
+  
+  #average_gain/=14
+  #average_loss/=14
+  average_gain_f=(last_average_gain*13+average_gain)/14
+  average_loss_f=(last_average_loss*13+average_loss)/14
+  RS=average_gain_f/average_loss_f
+  ratio=100/(1+RS)
+  RSI=100-ratio
+  indices.append(RSI)
+  #print(RSI)
+  last_average_gain=average_gain
+  last_average_loss=average_loss
+
+
+# Finding the stregngth of the signal
+def signal_computation(i,closing_prices):
+  last_start=(-502+i)-14
+  last_end=-502+i
+  current_start=(-503+i)-14
+  current_end=-503+i
+  last_data=close[last_start:last_end]
+  current_data=close[last_start:last_end]
+  last_average_gain=0
+  last_average_loss=0
+  current_average_gain=0
+  current_average_loss=0
+  current_loss=0
+  current_gain=0
+  for j in range(len(last_data)-1):
+
+    if last_data[j+1]>last_data[j]:
+      diff=last_data[j+1]-last_data[j]
+      last_average_gain+=diff
+    elif last_data[j+1]<last_data[j]:
+      diff=last_data[j]-last_data[j+1]
+      last_average_loss+=diff
+    #if current_data[j+1]>current_data[j]:
+     # diff=current_data[j+1]-current_data[j]
+      #current_average_gain+=diff
+    #elif current_data[j+1]<current_data[j]:
+     # diff=current_data[j]-current_data[j+1]
+      #current_average_loss+=diff
+  last_average_loss=last_average_loss/14
+  last_average_gain=last_average_gain/14
+  if current_data[-1]>current_data[-2]:
+
+    current_gain=current_data[-1]-current_data[-2]
+  elif current_data[-1]<current_data[-2]:
+    current_loss=current_data[-2]-current_data[-1]
+  average_gain_f=(last_average_gain*13+current_gain)/14
+  average_loss_f=(last_average_loss*13+current_loss)/14
+  
+  RS=average_gain_f/average_loss_f
+  ratio=100/(1+RS)
+  RSI=100-ratio
+  return RSI 
+# Setting stop limits and stop gain
+def stop_limits(held_shares_value,current_held_shares,current_price):
+  stop_loss=held_shares_value-(held_shares_value*0.05)
+  stop_gain=held_shares_value*1.1
+  if current_held_shares>0 and current_price*current_held_shares>=stop_gain or current_held_shares>0 and current_price*current_held_shares<=stop_loss:
+    return True
+  else:
+    return False
+
+def main(data):
+  close=np.array(data[['Close']])
+  open=np.array(data[['Open']])
+  testc=close[-502:]
+  testo=open[-502:]
+  def trading():
+     total_investment=0
+     total_win=0
+     total_loss=0
+     profit=0
+     current_held_shares=0
+     held_shares_value=0
+     purchased_value=0
+     purchased_time=0
+     holding_days=[]
+     total_positive_trades=0
+     total_negative_trades=0
+     ref=np.average(close[-532:-502])
+     k_9=2/10
+     k_12=2/13
+     k_26=2/27
+     k_14=2/15
+     averages=[]
+     values=[]
+     last_close=close[-503]
+     last_average=0
+
+     average=close[-503]
+     last_average=close[-503]
+     last_9=ref
+     last_12=ref
+     last_26=ref
+     last_14=ref
+     current_9=0
+     current_12=0
+     current_26=0
+     current_14=0
+     current_macd=0
+     last_macd=0
+    
+     #indices=[54.15982734066454, 54.066949016676006, 52.83337044449387, 53.541480139492705, 61.864871475328336, 60.53640012834135, 57.36633419184617, 53.923119859019046, 64.67510191429122, 70.29964276601216, 72.72294900413159, 64.35872218899439, 64.94416512355436, 64.38849311909013, 71.94323329890378, 74.87543136233641, 76.04005298122894, 60.742302844614656, 56.393504308279454, 63.382121915012156, 65.91167412400691, 61.07047255815068, 68.84393688067473, 73.13677040205243, 78.29113316447732, 80.85035737436961, 80.09752714151955, 79.20881680578609, 79.63866219632176, 80.92813333879725, 90.33115876138139, 82.2408746045429, 74.6326285044582, 67.18378913201398, 61.63707088785996, 41.90695486077042, 39.65409266587812, 44.28880864608959, 35.79115437516323, 33.37348061584521, 34.26229377741652, 35.888469509403436, 32.66178203228836, 34.44456851585494, 40.90843163933843, 28.23291260120628, 27.20897606995507, 31.173976059793958, 36.200798695582144, 34.35526404594752, 27.756097696729867, 29.14761815616555, 28.771993544513435, 27.899629545107558, 27.063208677628978, 23.686627999456732, 17.676352556349585, 13.766214505127081, 29.536899816927004, 33.924435298501564, 27.486764117303764, 25.04592506725095, 24.282646514759392, 38.76486478988257, 38.50317327141365, 44.69369669009973, 46.31927373166322, 35.65365134761565, 34.408617322163295, 48.47560213555111, 43.02597385953103, 47.04301151216865, 52.19416802557384, 42.558120648748094, 47.719778979001376, 49.00065952797563, 46.192600007220854, 47.534908638723564, 44.97082347409583, 44.88262629869456, 46.433364931590816, 49.67298616885733, 45.05121106675409, 52.928567491868336, 50.086272135073536, 44.840588842378665, 63.53262842548118, 50.559119523540225, 43.10822872557515, 42.808832065656446, 53.70959281012209, 60.04121908048318, 55.68308028188219, 63.801327483362215, 59.64044224639499, 51.26163535398518, 46.84893452766713, 47.4697765185626, 40.73840916938752, 40.04745416144781, 35.113059383011304, 36.52973092944652, 37.85207725443303, 39.25932764593807, 37.098373205738376, 44.98021432607009, 35.84787181653502, 36.81942070964956, 43.03414502204955, 39.76635723122724, 33.81499288808536, 38.68757279451641, 36.7971696926051, 47.27662343718071, 55.92813477713387, 46.167264469073615, 44.445867043472454, 52.756592139753636, 44.33767726310709, 50.73161006798651, 55.80227229583582, 49.63762487048006, 55.20784113029317, 56.19819391799388, 57.13584058354819, 57.67358916640692, 56.547690604634276, 43.65293685290785, 57.79423646961861, 54.004468329201515, 37.38423546045607, 53.71679846434833, 65.87675506754016, 59.58348587376849, 69.53168946337016, 60.82729462644838, 59.77777509152382, 49.7904113360586, 53.70135804340895, 55.09622107670244, 59.27963403363419, 62.97663946324664, 66.73025529443038, 60.819080099511964, 58.39389016351773, 56.66388380989003, 59.04489842640338, 57.90389776117232, 64.10255588428772, 64.11447564460596, 80.19855585753417, 74.18587768242332, 74.88986493966844, 74.59947761259366, 69.53107021353019, 61.244654103390715, 75.63187464091482, 75.87902579841625, 56.065563636400576, 60.883171893156, 62.92637735561329, 64.99534795789226, 69.64865013757873, 68.73879062177743, 62.371126239345344, 66.47282571422338, 62.61993761619965, 66.14264847142259, 64.5933792578759, 79.88793460000363, 75.68376589180632, 72.17213920149248, 71.28022291970021, 68.14079044351598, 66.1182724817026, 64.95896869105877, 63.503526574501734, 69.61274803804994, 66.2552477549576, 68.8386504779323, 65.72389099919286, 65.09786106751525, 38.560815609560926, 41.770450688825385, 49.28062642276904, 55.318760224263784, 56.22908876168886, 54.7231364435359, 50.95201111623262, 49.74778723029552, 41.9503244219963, 48.27917622458316, 44.414771111552376, 49.57305480635948, 52.676053147059946, 37.7571298522147, 40.19211272900659, 39.925322057878674, 27.41901857074768, 28.220576563601526, 37.66944002380644, 49.920619905364255, 45.85725681027004, 44.29430561309031, 34.89196792718326, 47.36367925510334, 56.305617762310774, 49.07273461767349, 45.946935733368726, 48.69284942630203, 47.70436302390192, 56.06638871599502, 58.68000094210091, 56.024458591548076, 56.938273768215154, 61.09126867153637, 62.59149223115613, 65.40800379951993, 65.45703862721518, 58.478537088866425, 68.92442821179714, 83.5930497721538, 70.69138873777418, 76.24316961353144, 74.0294601748451, 75.85450665917071, 78.8256772851879, 78.91387715603496, 79.81730881791174, 79.21503244023319, 71.2762593513229, 63.27848570452081, 57.94907805309011, 48.190291667245354, 34.73195216161338, 36.965252213040145, 30.174557572901293, 26.84937929098966, 23.81492987003074, 21.633932137383667, 17.03221413359472, 25.967225142185868, 22.912389325173237, 27.944596441862643, 34.68835878801595, 31.639504810706214, 33.60770916093263, 34.60340335485279, 40.433732437616065, 48.43314761409113, 45.348848569511425, 40.3986212243315, 36.660804403045745, 33.47924405031296, 22.01699973036085, 20.80679073949358, 14.234783593757697, 7.780661787987555, 11.225409377075081, 36.684364196038246, 44.703164731023676, 44.275375310812905, 48.01273747481726, 50.66788439668372, 50.06588296760711, 55.73064533605934, 62.422271730764784, 63.26885418770001, 65.10937204795394, 81.54148034342255, 82.37422065772323, 91.50726140674307, 87.9992808579833, 86.14770493155297, 85.8429182420935, 85.52151523002601, 82.84269731714386, 90.31159142997102, 83.9402217047697, 66.30498226584879, 63.77117888403917, 62.143436218570606, 49.55179639202725, 54.35396289178008, 45.08079723119117, 43.540344059540395, 46.68944814743178, 45.20135769450747, 45.387613210770226, 42.09187531436589, 39.72079252447772, 44.99383805104219, 54.37916609466457, 56.463414172402835, 63.37538728830831, 76.0728039217982, 64.01656012470619, 70.43988259725074, 68.50621833234499, 64.14046472043853, 61.58058932180088, 56.270182232485936, 63.77556095289345, 56.785331331312406, 53.63724449297126, 51.583107835945135, 48.011574721805864, 36.38664878257179, 22.08973034623253, 39.427994644403825, 42.031031756206154, 45.89669141740672, 43.89595240955782, 48.97615378654875, 60.1390059478358, 56.271763588525964, 55.377006000426796, 57.69722963348546, 49.58804538793572, 49.85755364197357, 55.593105349751426, 47.12813072262335, 40.73733394239334, 44.09269649096644, 41.31523355035965, 40.9647184103528, 41.16108529638001, 38.926643607412025, 43.76908784688605, 53.99958860437628, 48.1226762197773, 60.33635051822904, 66.935129261783, 70.02536522220328, 81.8874417705832, 83.54169768468302, 83.19670375895515, 82.73338271827876, 83.46024377098948, 84.20526051514192, 83.26105347142993, 80.034166358057, 63.056806825053634, 67.00494545569455, 67.16538524917146, 52.69601733468561, 47.63964621550828, 47.92528334467945, 46.68881090763758, 39.859059416041255, 36.21926960172788, 37.103212991166984, 44.50705228956852, 36.77185894612523, 38.784959011239714, 43.814837033236365, 48.64360333327823, 42.94073935251632, 50.60041846517707, 49.93078390108976, 50.384203791994615, 48.165065368489834, 55.86484758799597, 59.43642153866775, 61.16762561126361, 52.15799669426709, 60.50456204846048, 61.547218233454046, 67.48692561309528, 69.53827573579669, 75.38858957567713, 76.68466770702864, 82.76701843461348, 81.91181947178362, 86.20874692145858, 83.74256290638901, 86.79265800891488, 89.67454189518446, 90.60860646192907, 97.67251901144085, 97.720830573055, 97.73886764653288, 96.70998120997238, 89.17716287013897, 80.42257020942736, 74.51436338238356, 74.11343669224617, 70.73827614075915, 77.97202310061652, 78.70336205091922, 74.22268445382562, 75.2781626757581, 76.04070756790595, 73.70895880210874, 74.44186980847113, 77.1338256981068, 84.79925837112715, 89.27431565485124, 87.83927997927962, 86.386893373371, 74.60173809023455, 58.64013394167748, 48.35599998357142, 49.861345516248036, 46.04675117038541, 50.62073145555872, 44.29112120231997, 33.980169323061006, 20.438132747097796, 14.51143500720778, 14.638588244770332, 11.210395021362373, 20.55359790929576, 27.57435639030747, 31.650839308428317, 30.086770360859575, 26.94806744666785, 34.766954726094426, 31.516560243396597, 51.01944111220348, 52.47354212966489, 57.79096534502523, 55.95965114923736, 56.47892971881638, 65.6466437563748, 59.63664087843123, 60.11259782257359, 60.65760819317515, 65.88676999393343, 75.49194956450722, 72.95069327307367, 78.75549350983536, 67.21581197321734, 62.52773807269477, 56.284854975608006, 73.42387399045623, 71.64091068300257, 73.0126227452997, 83.48763989914099, 80.95713127484925, 66.14694818352169, 67.90966454007102, 65.67730192424085, 64.60508757422363, 62.26616416169688, 60.23233015202611, 66.69036656664028, 71.66962852669941, 64.28934415865064, 67.54035764982424, 67.9253072298878, 55.424718559590495, 42.82696003542051, 56.07546766861026, 60.261321020525315, 50.634186256314294, 53.53757939595535, 60.52996118536485, 60.64213849899121, 59.52490591658376, 53.62633151426003, 55.85391457035087, 54.763720615171145, 55.57294168987405, 57.07741382583875, 69.45796673179281, 67.16151253448066, 58.21175201674534, 63.35923701381372, 60.52891487700859, 50.843104748582846, 32.243941484293686, 35.13646278843717, 36.21933326252995, 36.241745520498135, 37.10457559178863, 44.28441764756675, 52.40131159275441, 52.83262193434958, 49.099975891996344, 48.33432029054427, 50.917000334169735, 59.2850747734153, 56.995249749944996, 58.64062877002723, 60.40561123763247, 62.65057507708695, 57.45676349568889, 59.762621146352124, 52.04758996366246, 46.96819256018417, 44.74696987188002, 46.62986264056404, 50.31244903223164, 49.911373449532356, 35.873872403695714, 38.045621650825474, 48.1051739461578, 45.90729725594727, 45.77189964553134, 49.505102225043046, 41.87518133851535]
+     for i in range(len(testc)-1):
+   
+        current_12=testc[i]*k_12+last_12*(1-k_12)
+        current_26=testc[i]*k_26+last_26*(1-k_26)
+        current_macd=current_12-current_26
+        current_9=current_macd*k_9+last_9*(1-k_9)
+        current_14=testc[i]*k_14+last_14*(1-k_14)
+  
+        #macds.append(current_macd)
+        #signals.append(current_9)
+        signal=signal_computation(i,close)
+        
+  
+        if i>0 and last_macd<last_9 and current_macd>=current_9 and current_held_shares<1000 or signal<30 and current_held_shares<1000:
+  
+          purchased_value=testo[i+1]*500
+      
+          current_held_shares+=500
+          held_shares_value+=purchased_value
+          total_investment+=purchased_value
+          if purchased_time==0:
+            purchased_time=i+1
+
+  
+        elif i>0 and current_held_shares>0 and signal>=70 and current_held_shares>0 or current_held_shares>0 and stop_limits(held_shares_value,current_held_shares,testc[i]) or i>0 and last_macd>last_9 and current_macd<=current_9 and current_held_shares>0:
+           sell=testo[i+1]*current_held_shares
+           diff=sell-held_shares_value
+           profit+=sell-held_shares_value
+    
+           holding_days.append((i+1)-purchased_time)
+    
+           if diff>0:
+            total_positive_trades+=1
+            total_win+=diff
+           elif diff<0:
+            total_negative_trades+=1
+            total_loss+=diff
+           diff=0
+           purchased_value=0
+           held_shares_value=0
+           current_held_shares=0
+           sell=0
+           purchased_time=0
+    
+    
+        last_9=current_9
+        last_12=current_12
+        last_26=current_26
+        last_macd=current_macd
+        last_14=current_14
+        last_close=testc[i]
+
+     def performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days):
+       
+        rtn=(profit/total_investment)*100
+        positive_trades_ratio=total_positive_trades/(total_positive_trades+total_negative_trades)
+        negative_trades_ratio=total_negative_trades/(total_positive_trades+total_negative_trades)
+        average_win=total_win/total_positive_trades
+        average_loss=total_loss/total_negative_trades
+        appt=(positive_trades_ratio*average_win)-(negative_trades_ratio*abs(average_loss))
+        average_holding_period=np.average(holding_days)
+        print(rtn)
+        print(total_positive_trades,total_negative_trades)
+        print(positive_trades_ratio)
+        print(negative_trades_ratio)
+        print(average_win)
+        print(average_loss)
+        print(appt)
+        print(average_holding_period)
+   
+     return performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days)
+
+  return trading()
+main(data)
+
+
+main(data)
+# MACD
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+data=pd.read_csv('/content/WMT.csv')
+#Setting stop limit and stop gain
+def stop_limits(held_share_values,current_held_shares,current_price):
+  stop_loss=held_share_values-(held_share_values*0.05)
+  stop_gain=held_share_values*1.1
+  if current_held_shares>0 and current_price*current_held_shares>=stop_gain or current_held_shares>0 and current_price*current_held_shares<=stop_loss:
+    return True
+  else:
+    return False
+def main(data):
+  close=np.array(data[['Close']])
+  open=np.array(data[['Open']])
+  testc=close[-502:]
+  testo=open[-502:]
+# The trading function
+  def trading():
+    total_positive_trades=0
+    total_negative_trades=0
+    total_investment=0
+    purchased_value=0
+    purchased_time=0
+    total_win=0
+    total_loss=0
+    held_share_values=0
+    current_held_shares=0
+    sell=0
+    profit=0
+    last_close=close[-503]
+    last_average=0
+
+    average=close[-503]
+    last_average=close[-503]
+    current_9=0
+    current_12=0
+    current_26=0
+    current_14=0
+    current_macd=0
+    last_macd=0
+    
+    holding_days=[]
+    for i in range(len(testc)-1):
+  
+       current_12=testc[i]*k_12+last_12*(1-k_12)
+       current_26=testc[i]*k_26+last_26*(1-k_26)
+       current_macd=current_12-current_26
+       current_9=current_macd*k_9+last_9*(1-k_9)
+       current_14=testc[i]*k_14+last_14*(1-k_14)
+  
+  
+       if i>0 and last_macd<last_9 and current_macd>=current_9 and current_held_shares<1000:
+  
+          current_held_shares+=500
+          purchased_value=testo[i+1]*500
+          held_share_values+=purchased_value
+    
+          total_investment+=purchased_value
+          if purchased_time==0:
+            purchased_time=i+1
+       elif i>0 and last_macd>last_9 and current_macd<=current_9 and current_held_shares>0 or stop_limits(held_share_values,current_held_shares,testc[i]): 
+
+          sell=testo[i+1]*current_held_shares
+          profit+=sell-held_share_values
+          diff=sell-held_share_values
+     
+          holding_days.append((i+1)-purchased_time)
+     
+          if diff>0:
+            total_positive_trades+=1
+            total_win+=diff
+          elif diff<0:
+            total_negative_trades+=1
+            total_loss+=diff
+          diff=0
+          purchased_value=0
+          sell=0
+          current_held_shares=0
+          held_share_values=0
+          purchased_time=0
+
+       last_9=current_9
+       last_12=current_12
+       last_26=current_26
+       last_macd=current_macd
+       last_14=current_14
+       last_close=testc[i]
+
+    def performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days):
+      rtn=(profit/total_investment)*100
+      positive_trades_ratio=total_positive_trades/(total_positive_trades+total_negative_trades)
+      negative_trades_ratio=total_negative_trades/(total_positive_trades+total_negative_trades)
+      average_win=total_win/total_positive_trades
+      average_loss=total_loss/total_negative_trades
+      appt=(positive_trades_ratio*average_win)-(negative_trades_ratio*abs(average_loss))
+      average_holding_period=np.average(holding_days)
+      print(rtn)
+      print(total_positive_trades,total_negative_trades)
+      print(average_win)
+      print(average_loss)
+      print(appt)
+      print(average_holding_period)
+      print(positive_trades_ratio,negative_trades_ratio)
+    return performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days)
+  return trading()
+main(data)  
+
+
+
+  
+
+
+
+
+
