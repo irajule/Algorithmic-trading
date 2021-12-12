@@ -1,4 +1,4 @@
-# Applied methods will be bollinger bands + moving average, 
+# Applied methods will be bollinger bands + Moving Average, Relative Strength Index + MACD and MACD on its own. 
 
 # Bollinger bands + moving average
 #import the necessary models
@@ -171,8 +171,7 @@ for i in range(len(testc)):
         average_loss+=diff
 
   
-  #average_gain/=14
-  #average_loss/=14
+  
   average_gain_f=(last_average_gain*13+average_gain)/14
   average_loss_f=(last_average_loss*13+average_loss)/14
   RS=average_gain_f/average_loss_f
