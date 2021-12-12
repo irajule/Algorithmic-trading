@@ -105,15 +105,16 @@ def main(data):
         # Measure the performance of the method
     def performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days):
        
-        rtn=(profit/total_investment)*100
+        return=(profit/total_investment)*100
         positive_trades_ratio=total_positive_trades/(total_positive_trades+total_negative_trades)
         negative_trades_ratio=total_negative_trades/(total_positive_trades+total_negative_trades)
         average_win=total_win/total_positive_trades
         average_loss=total_loss/total_negative_trades
+        #Average Profit Per Trade (APPT)
         appt=(positive_trades_ratio*average_win)-(negative_trades_ratio*abs(average_loss))
         average_holding_period=np.average(holding_days)
 
-        print(rtn)
+        print(return)
         print(total_positive_trades,total_negative_trades)
         print(positive_trades_ratio)
         print(negative_trades_ratio)
