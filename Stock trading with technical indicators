@@ -1,4 +1,5 @@
 # Applied methods will be bollinger bands + Moving Average, Relative Strength Index + MACD and MACD on its own. 
+# Used data are from 2010-2019 from Walmart stock daily prices
 
 # Bollinger bands + moving average
 #import the necessary models
@@ -9,7 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
 #Read the data
-data=pd.read_csv('/content/CAT.csv')
+data=pd.read_csv('WMT.csv')
 # Defining stop gain and stop loss
 def stop_limits(held_share_values,current_held_shares,current_price):
   stop_loss=held_share_values-(held_share_values*0.1)
@@ -130,7 +131,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-data=pd.read_csv('/content/JPM.csv')
+data=pd.read_csv('WMT.csv')
 
 close=np.array(data[['Close']])
 open=np.array(data[['Open']])
@@ -356,7 +357,7 @@ main(data)
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-data=pd.read_csv('/content/WMT.csv')
+data=pd.read_csv('/WMT.csv')
 #Setting stop limit and stop gain
 def stop_limits(held_share_values,current_held_shares,current_price):
   stop_loss=held_share_values-(held_share_values*0.05)
