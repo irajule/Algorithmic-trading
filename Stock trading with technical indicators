@@ -1,7 +1,7 @@
 # Applied methods will be bollinger bands + Moving Average, Relative Strength Index + MACD and MACD on its own. 
 # Used data are from 2010-2019 from Walmart stock daily prices
 
-# Bollinger bands + moving average
+# Bollinger Bands + Moving Average
 #import the necessary models
 import re
 import numpy as np
@@ -126,6 +126,7 @@ def main(data):
 
     return performance_measurements(total_positive_trades,total_negative_trades,total_investment,profit,total_win,total_loss,holding_days)    
   return trading()
+# ###############################End of Bollinger Bands+ Moving Average############################################
 # Relative Strength Index + MACD  
 import pandas as pd
 import numpy as np
@@ -349,10 +350,11 @@ def main(data):
      return performance_measurements(total_positive_trades, total_negative_trades,total_investment,profit,total_win,total_loss,holding_days)
 
   return trading()
-main(data)
+#main(data)
+################End of RSI+MACD##########################################################################################################
 
 
-main(data)
+
 # MACD
 import pandas as pd
 import numpy as np
