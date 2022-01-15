@@ -28,16 +28,16 @@ for i in range(len(close)):
     y.append(1)
   elif close[i]<open[i] or open[i]==close[i]:
     y.append(0)
-# Independent variables
+# Independent variables or features
 x=np.array(df[['Open','High','Low','Volume']])
-# Split for training data
+# Split for training data. 
 x_train=x[:-502]
 #Standardise the data
 scaler= preprocessing.StandardScaler().fit(x_train)
 x_train=scaler.transform(x_train)
 # Training dependent data
 y_train=y[:-502]
-#Testing data
+#Testing data. 
 x_test=x[-502:]
 y_test=y[-502:]
 opens=open[-502:]
