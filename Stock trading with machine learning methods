@@ -59,7 +59,7 @@ for i in range(502):
     
     lows+=data[j][2]
     volumes+=data[j][3]
-    # Make new features for training the models
+  # Make new features for training the models
   if len(averages)==0:
      
     average_high=highs/200
